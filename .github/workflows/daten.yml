@@ -1,0 +1,42 @@
+name: MVB-Daten aktualisieren
+
+# Neuigkeiten/Baustellen/Stellen von mvbnet.de alle 30 Minuten sichern (Ersatz, falls die Live-Abfrage ausfällt),
+# das Liniennetz aus den Fahrplandaten jeden Montag neu bauen.
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      netz:
+        description: 'Liniennetz neu bauen'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mvb-daten
+  cancel-in-progress: false
+
+jobs:
+  daten:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Neuigkeiten, Baustellen und Stellen sichern
+        run: node tools/fetch-content.mjs
+      - name: Liniennetz neu bauen
+        if: github.event.schedule == '17 3 * * 1' || inputs.netz
+        run: node tools/build-network.mjs
+      - name: Änderungen speichern
+        run: |
+          git config user.name "mvb-daten-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || (git commit -m "Daten aktualisiert" && git push)
