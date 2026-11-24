@@ -105,7 +105,7 @@
     const s = M.Net.station(id);
     const ls = M.Net.linesAt(id).map((l) => l.line);
     const html = '<div class="pop"><b>' + esc(s.n) + '</b>' + M.lineGroups(ls) +
-      '<div class="btns">' + (actions || []).map((a, i) => '<button class="btn sm' + (i ? ' ghost' : '') + '" data-pa="' + i + '">' + esc(a.label) + '</button>').join('') + '</div></div>';
+      '<div class="btns">' + (actions || []).map((a, i) => '<button class="btn btn--sm ' + (i ? 'btn--outline' : 'btn--fill') + '" data-pa="' + i + '">' + esc(a.label) + '</button>').join('') + '</div></div>';
     const pop = new maplibregl.Popup({ closeButton: true, maxWidth: '300px', offset: 10 }).setLngLat(lngLat).setHTML(html).addTo(map);
     pop.getElement().addEventListener('click', (e) => {
       const b = e.target.closest('[data-pa]');

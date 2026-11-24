@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>MVB – Magdeburger Verkehrsbetriebe</title>
   <meta name="description" content="Verbindungen, Abfahrten in Echtzeit, interaktives Liniennetz, Störungsmeldungen, Tickets und Karriere bei den Magdeburger Verkehrsbetrieben.">
-  <meta name="theme-color" content="#00A04B">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
   <script>
@@ -20,13 +20,15 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-  <a class="sr" href="#app">Zum Inhalt springen</a>
+  <a class="sr" href="#app">Zum Hauptinhalt springen</a>
   <header class="hd" id="hd"></header>
-  <main id="app" tabindex="-1"></main>
-  <footer class="ft" id="ft"></footer>
-
-  <div class="help" id="help"></div>
-  <div class="modal" id="modal" hidden></div>
+  <div class="hd-overlay"></div>
+  <div class="page page--home" id="page">
+    <main id="app" tabindex="-1"></main>
+    <footer class="ft g" id="ft"></footer>
+  </div>
+  <div id="help"></div>
+  <div id="modal"></div>
 
   <!-- Seitenwechsel: Streifen fädeln ein → Thema → Streifen fädeln aus -->
   <div class="loader is-splash" id="loader" aria-hidden="true">

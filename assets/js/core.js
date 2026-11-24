@@ -135,14 +135,20 @@
     eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
     x: 'M6 6l12 12M18 6L6 18',
     live: 'M12 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.5 18.5a9 9 0 0 1 0-13M18.5 5.5a9 9 0 0 1 0 13',
-    a11y: 'M12 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM5 8l7 1.5L19 8M12 9.5V14l-3 7M12 14l3 7'
+    a11y: 'M12 21.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zM12 8.2a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zM7 9.5l5 1 5-1M12 10.5V14l-2.2 4M12 14l2.2 4',
+    ticketS: 'M7 3h10v18H7zM10 7h4M10 11h4M10 15h2',
+    abo: 'M4 6h16v12H4zM8 10h8M8 14h5',
+    bike: 'M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15l4-7h5l3 7M14 5h3',
+    wrench: 'M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5a4 4 0 0 0-2-2z',
+    laptop: 'M5 6h14v9H5zM3 18h18',
+    send: 'M21 3L10 14M21 3l-7 18-4-7-7-4 18-7z'
   };
-  M.icon = (name, cls) => '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (P[name] || P.info) + '"/></svg>';
+  M.ICON_I = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.4 3.6h3.2v3.2h-3.2zM8.6 9.2h5v9.2h1.8v2H8.6v-2h1.8v-7.2H8.6z" fill="currentColor"/></svg>';
+  M.icon = (name, cls) => '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (P[name] || P.info) + '"/></svg>';
 
-  /* ---------- Logo (eigene Wortmarke, keine Originaldatei) ---------- */
-  M.LOGO = '<svg viewBox="0 0 120 48" role="img" aria-label="MVB"><rect x="0" y="0" width="120" height="48" rx="12" fill="var(--mvb-green)"/>' +
-    '<path d="M10 37h100" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>' +
-    '<text x="60" y="31" text-anchor="middle" font-family="Rubik, Arial, sans-serif" font-weight="800" font-size="25" letter-spacing="1.5" fill="#fff">MVB</text></svg>';
+  /* ---------- Logo (eigenes MVB-Zeichen, gleiche Größe wie das BVG-Herz: 59 × 54) ---------- */
+  M.LOGO = '<svg viewBox="0 0 59 54" role="img" aria-label="MVB Startseite"><path d="M10 2h39a8 8 0 0 1 8 8v26a8 8 0 0 1-8 8H33l-3.5 7.5L26 44H10a8 8 0 0 1-8-8V10a8 8 0 0 1 8-8z" fill="var(--mvb-green)"/>' +
+    '<text x="29.5" y="29" text-anchor="middle" font-family="Transit, Rubik, Arial, sans-serif" font-weight="900" font-size="15.5" fill="#252525">MVB</text></svg>';
 
   /* ---------- Events ---------- */
   const ev = {};

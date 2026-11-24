@@ -1,72 +1,93 @@
-/* MVB – gemeinsame Bausteine: Haltestellen-Eingabe, Meldungen, Modal, Seitenkopf */
+/* MVB – gemeinsame Bausteine im BVG-Aufbau: Brotkrumen, Seitenkopf, Kachel-Listen, Eingaben mit Vorschlägen, Modal, Meldungen */
 (function (M) {
   'use strict';
   const esc = M.esc, icon = M.icon;
   const C = (M.C = {});
 
-  C.crumbs = (items) => '<nav class="crumbs" aria-label="Brotkrumen"><a href="#/">Startseite</a>' + items.map((it, i) => ' › ' + (i === items.length - 1 ? '<b>' + esc(it[0]) + '</b>' : '<a href="' + it[1] + '">' + esc(it[0]) + '</a>')).join('') + '</nav>';
-  C.phead = (title, lead, ic) => '<header class="phead' + (ic ? ' with-ic' : '') + '"><h1>' + (ic ? '<span class="ph-ic">' + icon(ic) + '</span>' : '') + esc(title) + '</h1>' + (lead ? '<p>' + lead + '</p>' : '') + '</header>';
+  /* ---------- Brotkrumen + Seitenkopf ---------- */
+  C.crumbs = (items, wide) => '<div class="g ' + (wide ? '' : 'g-normal') + '"><nav class="crumbs" aria-label="Brotkrumen"><ol><li><a href="#/">Startseite</a></li>' +
+    items.map((it, i) => '<li>' + (i === items.length - 1 || !it[1] ? esc(it[0]) : '<a href="' + it[1] + '">' + esc(it[0]) + '</a>') + '</li>').join('') + '</ol></nav></div>';
+  C.stage = (title, sub, ic) => '<div class="g lstage"><header><div class="sg__h1w">' + (ic ? '<span class="sg__icon">' + icon(ic) + '</span>' : '') + '<h1 class="sg__h1">' + esc(title) + '</h1></div>' + (sub ? '<p class="sg__sub">' + sub + '</p>' : '') + '</header></div>';
 
-  /* ---------- Haltestellen-/Ort-Eingabe mit Vorschlägen ---------- */
+  /* ---------- Kachel-Liste (TeaserList) ---------- */
+  // items: [{ t, d, href, ic, dark, badge }]
+  C.teaserList = function (title, items, o) {
+    o = o || {};
+    const kind = o.std ? 'tl--std' : 'tl--hl';
+    return '<section class="tl ' + kind + ' tl--cols-2">' + (title ? '<h2>' + esc(title) + '</h2>' : '') + '<ul>' + items.map((it) => {
+      const ext = /^https?:/.test(it.href || '');
+      const lead = it.ic ? '<span class="tl__icon' + (it.dark ? ' tl__icon--dark' : '') + '">' + (it.badge ? esc(it.badge) : icon(it.ic)) + '</span>' : '';
+      return '<li><a class="tl__item" href="' + esc(it.href || '#') + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + (it.attr || '') + '><div class="tl__inner' + (lead ? ' centered' : '') + '">' + lead +
+        '<div class="tl__txt"><h3>' + esc(it.t) + ' </h3>' + (it.d ? '<p>' + esc(it.d) + '</p>' : '') + (it.html || '') + '</div></div>' + icon('arrow', 'tl__arrow') + '</a></li>';
+    }).join('') + '</ul>' + (o.bottom ? '<a class="btn btn--fill tl__bottom" href="' + esc(o.bottom[1]) + '">' + esc(o.bottom[0]) + '</a>' : '') + '</section>';
+  };
+
+  /* ---------- Haltestellen-/Ort-Eingabe mit Vorschlägen (BVG-Eingabefeld) ---------- */
   C.placeInput = function (wrap, o) {
     o = o || {};
-    wrap.classList.add('fld', 'has-lbl');
-    wrap.innerHTML = '<span class="lbl">' + esc(o.label || 'Haltestelle') + '</span><input type="text" autocomplete="off" spellcheck="false" placeholder="' + esc(o.placeholder || 'Haltestelle eingeben') + '" aria-label="' + esc(o.label || 'Haltestelle') + '"><div class="sugg" hidden role="listbox"></div>';
+    wrap.classList.add('cf__input');
+    wrap.innerHTML = '<input type="text" autocomplete="off" spellcheck="false" aria-label="' + esc(o.label || 'Haltestelle') + '" placeholder=" "><span class="cf__label">' + esc(o.label || 'Haltestelle') + '</span><div class="sugg" hidden role="listbox"></div>';
     const inp = M.$('input', wrap), box = M.$('.sugg', wrap);
     let value = null, items = [], act = -1, seq = 0;
-    const render = (list, extra) => {
-      items = list;
-      act = -1;
-      if (!list.length && !extra) { box.hidden = true; return; }
-      box.innerHTML = (extra || '') + list.map((p, i) => '<button type="button" data-i="' + i + '">' + icon(p.type === 'address' ? 'pin' : p.type === 'poi' ? 'star' : 'tram') + '<span>' + esc(p.name) + '</span>' +
-        (p.id && M.Net.data && M.Net.data.stations[p.id] ? '<span class="s-lines">' + M.lineGroups(M.Net.linesAt(p.id).map((l) => l.line)) + '</span>' : '') + '</button>').join('');
+    const mark = () => wrap.classList.toggle('has-value', !!inp.value);
+    const recent = () => M.store.get('recentStops', []).filter((p) => p && p.name).slice(0, 5);
+    const render = (list, head, foot) => {
+      items = list; act = -1;
+      if (!list.length && !foot) { box.hidden = true; return; }
+      box.innerHTML = '<div class="sugg__sec">' + (head ? '<div class="sugg__head">' + esc(head) + '</div>' : '') + list.map((p, i) => '<button type="button" class="sugg__item" data-i="' + i + '">' + icon(p.type === 'address' ? 'pin' : p.type === 'poi' ? 'star' : head === 'Meine letzten Anfragen' ? 'clock' : 'pin') + '<span>' + esc(p.name) + '</span>' +
+        (p.id && M.Net.data && M.Net.data.stations[p.id] ? '<span class="sugg__lines">' + M.lineGroups(M.Net.linesAt(p.id).map((l) => l.line)) + '</span>' : '') + '</button>').join('') + '</div>' + (foot || '');
       box.hidden = false;
     };
-    const recent = () => M.store.get('recentStops', []).filter((p) => p && p.name).slice(0, 5);
-    const showRecent = () => { const r = recent(); if (r.length && !inp.value.trim()) render(r, '<div class="s-head">Zuletzt gesucht</div>'); };
+    const showRecent = () => {
+      const r = recent();
+      render(r, r.length ? 'Meine letzten Anfragen' : '', '<button type="button" class="sugg__fav" data-fav>' + icon('heart') + 'Favoriten verwalten</button>');
+    };
     const search = M.debounce(async () => {
       const q = inp.value.trim();
       const my = ++seq;
-      if (q.length < 2) { showRecent(); if (!q) box.hidden = !recent().length; return; }
+      if (q.length < 2) { showRecent(); return; }
       await M.Net.load().catch(() => null);
-      const loc = M.searchStations(q, 8).map((s) => ({ id: s.id, name: s.name, lat: s.lat, lon: s.lon, type: 'stop' }));
       if (my !== seq) return;
-      render(loc);
+      const loc = M.searchStations(q, 8).map((s) => ({ id: s.id, name: s.name, lat: s.lat, lon: s.lon, type: 'stop' }));
+      render(loc, 'Haltestellen');
       if (o.addresses && q.length >= 3) {
         const geo = await M.Transit.geocode(q);
         if (my !== seq || value || document.activeElement !== inp) return;
         const extra = geo.filter((g) => g.type !== 'stop' && !loc.some((l) => l.name === g.name)).slice(0, 5);
-        render(loc.concat(extra));
+        render(loc.concat(extra), 'Vorschläge');
       }
     }, 140);
     const pick = (p) => {
-      seq++; value = p; inp.value = p.name; box.hidden = true;
+      seq++; value = p; inp.value = p.name; box.hidden = true; mark();
       if (p.type === 'stop') M.store.set('recentStops', [p].concat(recent().filter((x) => x.name !== p.name)).slice(0, 8));
       o.onPick && o.onPick(p);
     };
-    inp.addEventListener('input', () => { value = null; search(); });
+    inp.addEventListener('input', () => { value = null; mark(); search(); });
     inp.addEventListener('focus', () => { if (!inp.value.trim()) showRecent(); else search(); });
     inp.addEventListener('keydown', (e) => {
-      const bs = M.$$('button', box);
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); act = (act + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length; bs.forEach((b, i) => b.classList.toggle('act', i === act)); }
-      else if (e.key === 'Enter') { e.preventDefault(); if (items.length) pick(items[Math.max(0, act)]); else o.onEnter && o.onEnter(); }
+      const bs = M.$$('.sugg__item', box);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!bs.length) return; act = (act + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length; bs.forEach((b, i) => b.classList.toggle('act', i === act)); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (items.length && !box.hidden) pick(items[Math.max(0, act)]); else o.onEnter && o.onEnter(); }
       else if (e.key === 'Escape') box.hidden = true;
     });
     box.addEventListener('mousedown', (e) => e.preventDefault());
-    box.addEventListener('click', (e) => { const b = e.target.closest('[data-i]'); if (b) pick(items[+b.dataset.i]); });
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-i]'); if (b) { pick(items[+b.dataset.i]); return; }
+      if (e.target.closest('[data-fav]')) { box.hidden = true; location.hash = '#/konto'; }
+    });
     inp.addEventListener('blur', () => setTimeout(() => { box.hidden = true; }, 120));
     return {
       get: () => value,
-      set: (p) => { value = p; inp.value = p ? p.name : ''; },
+      set: (p) => { value = p; inp.value = p ? p.name : ''; mark(); },
       async resolve() {
         if (value) return value;
         const q = inp.value.trim();
         if (!q) return null;
         await M.Net.load().catch(() => null);
         const s = M.searchStations(q, 1)[0];
-        if (s) { value = { id: s.id, name: s.name, lat: s.lat, lon: s.lon, type: 'stop' }; inp.value = s.name; return value; }
+        if (s) { value = { id: s.id, name: s.name, lat: s.lat, lon: s.lon, type: 'stop' }; inp.value = s.name; mark(); return value; }
         const g = (await M.Transit.geocode(q))[0];
-        if (g) { value = g; inp.value = g.name; }
+        if (g) { value = g; inp.value = g.name; mark(); }
         return value;
       },
       focus: () => inp.focus(),
@@ -74,21 +95,16 @@
     };
   };
 
-  /* ---------- Modal ---------- */
-  C.modal = function (html, o) {
+  /* ---------- Modal (BVG-Dialog) ---------- */
+  C.modal = function (title, html, o) {
     o = o || {};
     const root = M.$('#modal');
-    root.innerHTML = '<div class="modal__box" role="dialog" aria-modal="true"' + (o.label ? ' aria-label="' + esc(o.label) + '"' : '') + '><button class="icbtn modal__x" data-close aria-label="Schließen">' + icon('close') + '</button>' + html + '</div>';
-    root.hidden = false;
+    root.innerHTML = '<div class="modal"><div class="modal__box" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><header class="modal__head"><h2>' + esc(title) + '</h2><button class="btn btn--plain btn--sm" data-close aria-label="Schließen">' + icon('close') + '</button></header><div class="modal__body">' + html + '</div></div></div>';
     document.documentElement.style.overflow = 'hidden';
-    const close = () => {
-      root.hidden = true; root.innerHTML = ''; document.documentElement.style.overflow = '';
-      document.removeEventListener('keydown', onKey);
-      o.onClose && o.onClose();
-    };
+    const close = () => { root.innerHTML = ''; document.documentElement.style.overflow = ''; document.removeEventListener('keydown', onKey); C.closeModal = null; o.onClose && o.onClose(); };
     const onKey = (e) => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', onKey);
-    root.onclick = (e) => { if (e.target === root || e.target.closest('[data-close]')) close(); };
+    M.$('.modal', root).addEventListener('click', (e) => { if (e.target.classList.contains('modal') || e.target.closest('[data-close]')) close(); });
     C.closeModal = close;
     return M.$('.modal__box', root);
   };
@@ -100,38 +116,31 @@
     doc.querySelectorAll('*').forEach((el) => {
       [...el.attributes].forEach((a) => {
         const n = a.name.toLowerCase();
-        if (n.startsWith('on') || n === 'style' || n === 'class' || n === 'id' || n === 'srcset' || n === 'sizes') el.removeAttribute(a.name);
+        if (n.startsWith('on') || n === 'style' || n === 'class' || n === 'id' || n === 'srcset' || n === 'sizes' || n === 'width' || n === 'height') el.removeAttribute(a.name);
         if ((n === 'href' || n === 'src') && /^\s*javascript:/i.test(a.value)) el.removeAttribute(a.name);
       });
       if (el.tagName === 'A') { el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener'); }
       if (el.tagName === 'IMG') { el.setAttribute('loading', 'lazy'); el.setAttribute('referrerpolicy', 'no-referrer'); }
     });
-    // Shortcode-Reste („[/kt_box]-->“) entfernen
     return doc.body.innerHTML.replace(/\[\/?[a-z_]+[^\]]*\]\s*(-->)?/gi, '');
   };
 
   /* ---------- Meldungen (Baustellen & Störungen) ---------- */
-  /** Alle Meldungen: Baustellen-Beiträge der MVB + Störungsmeldungen (INSA) */
+  const TAGCLS = { sev: 'tag--info', detour: 'tag--info', closed: 'tag--warn', moved: 'tag--info', ok: 'tag--success' };
+  C.tags = (kinds) => (kinds || []).map((k) => '<span class="tag ' + (TAGCLS[k] || '') + '">' + esc(M.TAG_LABEL[k][0]) + '</span>').join('');
   C.allDisruptions = async function () {
     const [news, rem] = await Promise.all([M.News.load().catch(() => []), M.Remarks.load()]);
-    const work = news.filter((n) => M.News.isWork(n)).map((n) => ({
-      id: 'n' + n.id, slug: n.slug, title: n.title, text: n.text, html: n.html, date: n.date, from: n.date, lines: n.lines, kind: n.kind, link: n.link, src: 'mvb', news: n
-    }));
+    const work = news.filter((n) => M.News.isWork(n)).map((n) => ({ id: 'n' + n.id, slug: n.slug, title: n.title, text: n.text, html: n.html, date: n.date, from: n.date, lines: n.lines, kind: n.kind, link: n.link, src: 'mvb' }));
     return work.concat(rem.map((r) => Object.assign({ date: r.modified || r.from }, r))).sort((a, b) => new Date(b.date) - new Date(a.date));
   };
-  C.disItem = function (x) {
-    return '<button class="ditem" data-dis="' + esc(x.id) + '"><div><div class="ditem__t">' + (x.lines.length ? M.lineGroups(x.lines) : '<span class="bds">' + icon('alert') + '</span>') + '<span>' + esc(x.title) + '</span></div>' +
-      '<div class="ditem__tags">' + M.tagsHtml(x.kind) + '</div><div class="ditem__meta">' + (x.until ? 'Von ' + M.fmtDate(x.from) + ' bis ' + M.fmtDate(x.until) : 'Meldung vom ' + M.fmtDate(x.date)) + (x.src === 'insa' ? ' · Verkehrsmeldung' : ' · mvbnet.de') + '</div></div>' + icon('info', 'info') + '</button>';
-  };
-  /** Inhalt einer Meldung inkl. interaktiver Störungskarte */
+  /** Zeile wie „Baumaßnahmen & Störungen“ auf der BVG-Startseite */
+  C.disItem = (x) => '<li><button class="dis__item" data-dis="' + esc(x.id) + '"><span>' + (x.lines.length ? '<span class="dis__lines">' + M.lineGroups(x.lines) + '</span>' : '') +
+    '<span class="dis__stops">' + esc(x.title) + '</span><span class="dis__tags">' + C.tags(x.kind).replace(/<\/span>(?=<span|$)/g, '</span>') + '</span></span><span class="dis__btn">' + icon('info') + '</span></button></li>';
   C.disBody = function (x) {
-    return '<div class="ditem__tags" style="margin-bottom:10px">' + M.tagsHtml(x.kind) + '</div>' +
-      '<p class="muted" style="font-size:14px;margin-bottom:8px">' + icon('cal') + ' ' + (x.until ? 'Von ' + M.fmtDate(x.from) + ' bis ' + M.fmtDate(x.until) : 'Veröffentlicht am ' + M.fmtDate(x.date)) + '</p>' +
-      '<div class="dmapbox"></div>' +
-      '<div class="prose">' + (x.html ? C.cleanHtml(x.html) : '<p>' + esc(x.text) + '</p>' + (x.stops && x.stops.length ? '<p><b>Betroffene Haltestellen:</b> ' + esc(x.stops.join(', ')) + '</p>' : '')) + '</div>' +
-      (x.link ? '<p style="margin-top:14px;font-size:14px"><a class="link" href="' + esc(x.link) + '" target="_blank" rel="noopener">Originalmeldung auf mvbnet.de ' + icon('out') + '</a></p>' : '');
+    return '<p style="font-size:1rem;margin-bottom:.75rem">' + C.tags(x.kind) + '</p><p class="nitem__date" style="margin-bottom:1rem">Von <time>' + icon('cal') + M.fmtDate(x.from || x.date) + '</time>' + (x.until ? ' Bis <time>' + icon('cal') + M.fmtDate(x.until) + '</time>' : ' Bis auf weiteres') + '</p>' +
+      '<div class="dmapbox"></div><div class="rt">' + (x.html ? C.cleanHtml(x.html) : '<p>' + esc(x.text) + '</p>' + (x.stops && x.stops.length ? '<p><b>Betroffene Haltestellen:</b> ' + esc(x.stops.join(', ')) + '</p>' : '')) + '</div>' +
+      (x.link ? '<p style="margin-top:1.5rem"><a class="btn btn--outline btn--sm btn--icon" href="' + esc(x.link) + '" target="_blank" rel="noopener">' + icon('out') + 'Originalmeldung auf mvbnet.de</a></p>' : '');
   };
-  /** Störungskarte in einen Behälter zeichnen */
   C.mountDisMap = async function (box, x) {
     if (!box) return;
     box.innerHTML = '<div class="spin"></div>';
@@ -139,61 +148,34 @@
     try { plan = await M.disruptionPlan(x); } catch (e) { plan = null; }
     if (!plan || (!plan.closed.length && !plan.lines.length && !(plan.stations || []).length)) { box.innerHTML = ''; return; }
     const det = plan.detours[0];
-    box.innerHTML = '<div class="dlegend">' +
-      (plan.closed.length ? '<span><i class="closed"></i>Gesperrter Abschnitt</span><span><i class="cross"></i>Sperrung</span>' : '') +
-      (plan.detours.length ? '<span><i class="det" style="--c:' + esc(det.color) + '"></i>' + esc(plan.sev ? 'Ersatzverkehr / neuer Fahrweg' : 'Neuer Fahrweg (Umleitung)') + '</span>' : '') +
-      (plan.lines.length ? '<span>Betroffen: ' + M.lineGroups(plan.lines.map((l) => l.line)) + '</span>' : '') + '</div>' +
-      '<div class="dmap"><div class="map"></div></div>' +
-      (plan.closed.length && !plan.manual ? '<p class="muted" style="font-size:12.5px;margin:-6px 0 14px">Karte automatisch aus der Meldung erstellt (Haltestellen, Straßen und Linien im Text). Maßgeblich ist der Text der MVB.</p>' : '');
-    M.Maps.create(M.$('.map', box), { center: plan.focus[0], zoom: 14, draw: (map) => M.Maps.disruption(map, plan), cooperative: false });
+    box.innerHTML = '<div class="dlegend">' + (plan.closed.length ? '<span><i class="closed"></i>Gesperrter Abschnitt</span><span><i class="cross"></i>Sperrung</span>' : '') +
+      (det ? '<span><i class="det" style="--c:' + esc(det.color) + '"></i>' + (plan.sev ? 'Ersatzverkehr / neuer Fahrweg' : 'Neuer Fahrweg (Umleitung)') + '</span>' : '') +
+      (plan.lines.length ? '<span>Betroffen: ' + M.lineGroups(plan.lines.map((l) => l.line)) + '</span>' : '') + '</div><div class="dmap"><div class="map"></div></div>';
+    M.Maps.create(M.$('.map', box), { center: plan.focus[0], zoom: 14, draw: (map) => M.Maps.disruption(map, plan) });
   };
   C.openDisruption = function (x) {
-    const box = C.modal('<h2 style="font-size:var(--fs-h3);margin-right:40px">Details zur Baumaßnahme oder Störung</h2>' +
-      '<div class="ditem__t" style="margin:14px 0 8px;font-size:17px">' + M.lineGroups(x.lines, { sm: false }) + '<span>' + esc(x.title) + '</span></div>' + C.disBody(x), { label: x.title });
+    const box = C.modal('Details zur Baumaßnahme oder Störung', '<h3 class="nitem__trig" style="padding:0 0 .5rem;display:block"><span style="font-size:1rem;font-weight:700;line-height:2">' + (x.lines.length ? M.lineGroups(x.lines) + ' ' : '') + esc(x.title) + '</span></h3>' + C.disBody(x));
     C.mountDisMap(M.$('.dmapbox', box), x);
   };
 
-  /* ---------- Hero-Grafik: Magdeburg mit Dom, Elbe und Straßenbahn ---------- */
+  /* ---------- Bilder (MVB-Grafiken, falls kein Foto vorhanden ist) ---------- */
   C.heroArt = function () {
     return '<svg viewBox="0 0 1600 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
-      '<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--mvb-green-800)"/><stop offset=".6" stop-color="var(--mvb-green-700)"/><stop offset="1" stop-color="var(--mvb-green)"/></linearGradient>' +
-      '<linearGradient id="tram" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E6ECE8"/></linearGradient>' +
-      '<radialGradient id="glow" cx=".72" cy=".25" r=".6"><stop offset="0" stop-color="#2ED47A" stop-opacity=".55"/><stop offset="1" stop-color="#2ED47A" stop-opacity="0"/></radialGradient></defs>' +
-      '<rect width="1600" height="700" fill="url(#sky)"/><rect width="1600" height="700" fill="url(#glow)"/>' +
-      // Linien im Hintergrund (Liniennetz-Motiv)
-      '<g fill="none" stroke-width="10" stroke-linecap="round" opacity=".28">' +
-      '<path d="M-20 140 C 300 160, 420 300, 700 300 S 1200 180, 1640 220" stroke="var(--line-tram-1)"/>' +
-      '<path d="M-20 220 C 260 230, 480 360, 760 350 S 1180 260, 1640 300" stroke="var(--line-tram-9)"/>' +
-      '<path d="M-20 300 C 300 320, 520 420, 820 400 S 1240 330, 1640 380" stroke="var(--line-tram-4)"/>' +
-      '<path d="M-20 80 C 380 100, 560 240, 860 240 S 1300 120, 1640 150" stroke="var(--line-tram-10)"/></g>' +
-      // Skyline mit Dom
-      '<g fill="#003D1E" opacity=".55">' +
-      '<path d="M0 470 L0 420 L60 420 L60 400 L120 400 L120 430 L190 430 L190 380 L230 380 L230 410 L300 410 L300 440 L360 440 L360 395 L420 395 L420 430 L500 430 L500 470 Z"/>' +
-      '<path d="M1040 470 L1040 300 L1052 300 L1060 180 L1068 300 L1080 300 L1080 330 L1150 330 L1150 300 L1162 300 L1170 180 L1178 300 L1190 300 L1190 470 Z"/>' +
-      '<path d="M1080 330 L1150 330 L1150 470 L1080 470 Z M960 470 L960 390 L1040 360 L1040 470 Z M1190 360 L1290 390 L1290 470 L1190 470 Z"/>' +
-      '<path d="M1290 470 L1290 420 L1360 420 L1360 395 L1420 395 L1420 430 L1500 430 L1500 405 L1600 405 L1600 470 Z"/></g>' +
-      // Elbe
-      '<path d="M0 470 L1600 470 L1600 520 L0 520 Z" fill="#00552A" opacity=".55"/>' +
-      '<g stroke="#6CCB8F" stroke-width="3" opacity=".35" stroke-linecap="round"><path d="M80 492 h120M380 500 h160M760 488 h90M1100 502 h150M1380 494 h110"/></g>' +
-      // Gleis
-      '<rect x="0" y="600" width="1600" height="100" fill="#00381C" opacity=".75"/>' +
-      '<rect x="0" y="606" width="1600" height="6" fill="#9FB8A8" opacity=".7"/><rect x="0" y="626" width="1600" height="5" fill="#9FB8A8" opacity=".5"/>' +
-      '<path d="M0 548 H1600" stroke="#C9D6CE" stroke-width="2" opacity=".45"/>' +
-      // Straßenbahn (moderner Niederflurwagen, 5 Module)
-      '<g transform="translate(330 470)">' +
-      '<path d="M0 36 Q0 8 30 6 L900 6 Q960 8 990 50 L1010 110 Q1012 128 994 128 L10 128 Q0 128 0 116 Z" fill="url(#tram)"/>' +
-      '<path d="M0 100 L1008 100 L1012 112 L0 112 Z" fill="var(--mvb-green)"/>' +
-      '<path d="M0 22 L940 22" stroke="var(--mvb-green)" stroke-width="6"/>' +
-      '<g fill="#173226">' +
-      '<rect x="24" y="34" width="120" height="50" rx="7"/><rect x="214" y="34" width="150" height="50" rx="7"/><rect x="434" y="34" width="150" height="50" rx="7"/><rect x="654" y="34" width="150" height="50" rx="7"/>' +
-      '<path d="M874 34 L944 34 Q972 40 988 84 L874 84 Z"/></g>' +
-      '<g fill="#2D4A3C"><rect x="160" y="34" width="38" height="78" rx="4"/><rect x="380" y="34" width="38" height="78" rx="4"/><rect x="600" y="34" width="38" height="78" rx="4"/><rect x="820" y="34" width="38" height="78" rx="4"/></g>' +
-      '<g stroke="#FFFFFF" stroke-width="2" opacity=".35"><path d="M179 34v78M399 34v78M619 34v78M839 34v78"/></g>' +
-      '<rect x="900" y="12" width="64" height="16" rx="3" fill="#0B1A13"/><text x="932" y="25" text-anchor="middle" font-family="Rubik, Arial" font-weight="700" font-size="12" fill="#FFB238">9 Reform</text>' +
-      '<g stroke="#5E6B64" stroke-width="3" fill="none"><path d="M560 6 L540 -40 L640 -40 M600 -40 L590 -60 L700 -60"/></g>' +
-      '<g fill="#1E2421"><circle cx="90" cy="132" r="13"/><circle cx="300" cy="132" r="13"/><circle cx="720" cy="132" r="13"/><circle cx="930" cy="132" r="13"/></g>' +
-      '<circle cx="996" cy="98" r="5" fill="#FFF6C9"/></g>' +
-      '<path d="M0 410 H1600" stroke="#5E6B64" stroke-width="2" opacity=".5"/>' +
-      '</svg>';
+      '<defs><linearGradient id="hsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9FD3B4"/><stop offset="1" stop-color="#E9F5EE"/></linearGradient></defs>' +
+      '<rect width="1600" height="700" fill="url(#hsky)"/>' +
+      '<g fill="#7FB394" opacity=".75"><path d="M1040 520V300h12l8-120 8 120h12v30h70v-30h12l8-120 8 120h12v220z"/><path d="M960 520V390l80-30v160zM1190 360l100 30v130h-100z"/><path d="M0 520v-60h70v-30h80v40h90v-40h70v90zM1290 520v-60h70v-25h70v35h90v-30h80v80z"/></g>' +
+      '<rect y="520" width="1600" height="60" fill="#5E9C7A" opacity=".6"/><rect y="600" width="1600" height="100" fill="#3F5F4D"/><rect y="606" width="1600" height="6" fill="#B9C9BF"/>' +
+      '<g transform="translate(330 470)"><path d="M0 36Q0 8 30 6h870q60 2 90 44l20 60q2 18-16 18H10Q0 128 0 116z" fill="#fff"/><path d="M0 100h1008l4 12H0z" fill="#00A04B"/><path d="M0 22h940" stroke="#00A04B" stroke-width="6"/>' +
+      '<g fill="#1F3A2D"><rect x="24" y="34" width="120" height="50" rx="7"/><rect x="214" y="34" width="150" height="50" rx="7"/><rect x="434" y="34" width="150" height="50" rx="7"/><rect x="654" y="34" width="150" height="50" rx="7"/><path d="M874 34h70q28 6 44 50H874z"/></g>' +
+      '<g fill="#3A5446"><rect x="160" y="34" width="38" height="78" rx="4"/><rect x="380" y="34" width="38" height="78" rx="4"/><rect x="600" y="34" width="38" height="78" rx="4"/><rect x="820" y="34" width="38" height="78" rx="4"/></g>' +
+      '<rect x="900" y="12" width="64" height="16" rx="3" fill="#0B1A13"/><text x="932" y="25" text-anchor="middle" font-family="Arial" font-weight="700" font-size="12" fill="#FFB238">9 Reform</text>' +
+      '<g fill="#252525"><circle cx="90" cy="132" r="13"/><circle cx="300" cy="132" r="13"/><circle cx="720" cy="132" r="13"/><circle cx="930" cy="132" r="13"/></g></g></svg>';
+  };
+  /** kleine Netz-Grafik für Kacheln */
+  C.netArt = function (kind) {
+    if (kind === 'lines') return '<svg viewBox="0 0 80 80"><rect width="80" height="80" fill="#fff"/><path d="M22 8v64" stroke="var(--line-tram-9)" stroke-width="4"/><g fill="#fff" stroke="var(--line-tram-9)" stroke-width="2"><circle cx="22" cy="14" r="3.5"/><circle cx="22" cy="30" r="3.5"/><circle cx="22" cy="46" r="3.5"/><circle cx="22" cy="62" r="3.5"/></g><g fill="#9A9A9A"><rect x="32" y="12" width="34" height="4" rx="2"/><rect x="32" y="28" width="26" height="4" rx="2"/><rect x="32" y="44" width="38" height="4" rx="2"/><rect x="32" y="60" width="22" height="4" rx="2"/></g></svg>';
+    if (kind === 'stops') return '<svg viewBox="0 0 80 80"><rect width="80" height="80" fill="#fff"/><rect x="10" y="10" width="12" height="12" rx="2" fill="var(--mvb-green)"/><g fill="#9A9A9A"><rect x="10" y="32" width="36" height="4" rx="2"/><rect x="10" y="46" width="30" height="4" rx="2"/><rect x="10" y="60" width="40" height="4" rx="2"/></g><rect x="54" y="30" width="8" height="8" rx="2" fill="var(--line-tram-1)"/><circle cx="66" cy="48" r="4" fill="var(--mode-bus)"/><rect x="54" y="58" width="8" height="8" rx="2" fill="var(--line-tram-4)"/></svg>';
+    if (kind === 'map') return '<svg viewBox="0 0 80 80"><rect width="80" height="80" fill="#F3F3F3"/><g fill="none" stroke-width="4" stroke-linecap="round"><path d="M4 22c20 2 28 26 72 22" stroke="var(--line-tram-1)"/><path d="M6 62c22-6 36-34 70-46" stroke="var(--line-tram-9)"/><path d="M40 4v72" stroke="var(--line-tram-4)"/><path d="M4 40h72" stroke="var(--line-tram-10)"/></g><g fill="#fff" stroke="#252525" stroke-width="1.5"><circle cx="40" cy="38" r="4"/><circle cx="22" cy="26" r="3"/><circle cx="62" cy="24" r="3"/></g></svg>';
+    return '<svg viewBox="0 0 80 80"><rect width="80" height="80" fill="#fff"/><g fill="none" stroke-width="3"><path d="M8 26h64" stroke="var(--line-tram-1)"/><path d="M8 40c20 0 24 20 64 20" stroke="var(--line-tram-2)"/><path d="M40 8v64" stroke="var(--line-tram-4)"/><path d="M8 66C30 50 50 20 72 12" stroke="var(--line-tram-9)"/></g></svg>';
   };
 })(window.MVB = window.MVB || {});

@@ -1,6 +1,10 @@
 # MVB – Magdeburger Verkehrsbetriebe (Webseite)
 
-Webseite im Aufbau des BVG-Vorbilds, für die **Magdeburger Verkehrsbetriebe**, in MVB-Grün. Reines HTML, CSS und JavaScript ohne Build-Schritt – läuft direkt auf GitHub Pages.
+Webseite für die **Magdeburger Verkehrsbetriebe**, im Aufbau **1:1 wie bvg.de**: gleiches 14-Spalten-Raster, gleiche Breakpoints (480/768/960/1200/1472 px), gleiche Maße, Abstände, Radien, Schatten und Schriftgrößen. Überall, wo die BVG Gelb nutzt, steht MVB-Grün. Reines HTML, CSS und JavaScript ohne Build-Schritt – läuft direkt auf GitHub Pages.
+
+- **Schrift:** wie bei der BVG „Transit“. Die Schrift ist lizenzpflichtig und deshalb nicht im Repository. Ist sie auf dem Gerät installiert oder liegen lizenzierte Dateien unter `assets/fonts/` (`TransitPro.woff2`, `TransitPro-Bold.woff2`, `TransitPro-Black.woff2`, `TransitPro-BoldItalic.woff2`), wird sie automatisch genutzt – sonst **Rubik**.
+- **Kein elastisches Scrollen** (`overscroll-behavior: none`) und kein Hineinzoomen.
+- Kopfleiste wie bei der BVG: schwebend, blendet sich beim Herunterscrollen aus und beim Hochscrollen wieder ein.
 
 ## Farben ändern – eine Datei
 

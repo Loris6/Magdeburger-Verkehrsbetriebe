@@ -8,23 +8,30 @@
 
   P.karriere = {
     title: 'Karriere', nav: 'karriere',
-    async render(el, args) {
-      if (args[0] === 'job') return P.job.render(el, args.slice(1));
-      if (args[0] === 'bewerbung') return P.bewerbung.render(el, args.slice(1));
-      el.innerHTML = '<div class="wrap">' + C.crumbs([['Karriere']]) + C.phead('Karriere bei der MVB', 'Ob im Fahrdienst, in der Technik oder in der Verwaltung: Bei uns findest du einen sicheren Arbeitsplatz mit Perspektive. Bewirb dich direkt hier – ohne Umweg über andere Seiten.') +
-        '<p style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn" href="#jobs">Zu den Jobs</a><a class="btn ghost" href="#/karriere/bewerbung/initiativ">Initiativbewerbung</a></p>' +
-        '<section class="sec"><div class="topics">' +
-        '<div class="topic"><div><b>Benefits &amp; Bezahlung (TV-N LSA)</b><span>30 Tage Urlaub, freie Tage an Heiligabend und Silvester, kostenloser ÖPNV, Jobticket, betriebliche Altersvorsorge</span></div>' + icon('star') + '</div>' +
-        '<div class="topic"><div><b>Ausbildung</b><span>Fachkraft im Fahrbetrieb, Kfz-Mechatroniker, Gleisbauer, Industriekaufleute u. v. m. – mit Übernahme-Garantie</span></div>' + icon('rocket') + '</div>' +
-        '<div class="topic hl"><div><b>Bewerbung in 5 Schritten</b><span>Daten, Qualifikation, Zeugnisse (Vorder- und Rückseite), Motivation – fertig.</span></div>' + icon('check') + '</div></div></section>' +
-        '<section class="sec" id="jobs"><div class="sec__head"><h2>Aktuelle Stellen</h2><span class="muted" id="jSrc" style="font-size:13px"></span></div><div id="jList"><div class="spin"></div></div></section></div>';
-      M.$('a[href="#jobs"]', el).onclick = (e) => { e.preventDefault(); M.$('#jobs', el).scrollIntoView({ behavior: 'smooth' }); };
+    async render(el, args, shellEl) {
+      if (args[0] === 'job') return P.job.render(el, args.slice(1), shellEl);
+      if (args[0] === 'bewerbung') return P.bewerbung.render(el, args.slice(1), shellEl);
+      el.innerHTML = C.crumbs([['Karriere']]) +
+        '<div class="g"><div class="sn"><div class="sn__img">' + C.heroArt() + '</div><h1 class="sn__title"><span>Unsere Jobs –</span><span>so vielfältig wie Magdeburg</span></h1></div></div>' +
+        '<div class="g g-normal lstage" style="margin-top:3rem"><div><div class="rt"><p>Als einer der größten Arbeitgeber der Stadt bietet dir die MVB nicht nur spannende Jobs, sondern auch attraktive Arbeitsbedingungen. Ob im Fahrdienst, in der Technik oder in der Verwaltung: Bei uns findest du einen sicheren Arbeitsplatz mit Perspektive. Starte jetzt deine Karriere bei der MVB – und bewirb dich direkt hier.</p></div>' +
+        '<a class="btn btn--fill btn--lg" href="#jobs" style="margin-top:2rem">Zu den Jobs</a></div></div>' +
+        '<div class="g stack"><section class="tl tl--hl tl--cols-2" style="grid-column:2/14"><ul style="max-width:39.5rem">' +
+        [['Benefits & Bezahlung (TV-N LSA)', '30 Tage Urlaub, Heiligabend & Silvester frei, kostenloser ÖPNV, Jobticket, Altersvorsorge u. v. m.', 'https://www.mvbnet.de/karriere/stellenangebote/'],
+          ['Job-Events', 'Bei unseren Info-Abenden erfährst du alles über Einstieg, Berufe und Benefits.', 'https://www.mvbnet.de/karriere/ausbildung/'],
+          ['Berufserfahrene', 'Fahrdienst, Technik & Handwerk, kaufmännische Berufe, Verkehrsplanung', '#jobs'],
+          ['Schüler*innen', 'Ausbildung, Schülerpraktikum, Infos für Schulen', '#jobs'],
+          ['Trainees', 'Voraussetzungen und Bewerbung', '#jobs'],
+          ['Initiativbewerbung', 'Nichts Passendes dabei? Bewirb dich einfach so.', '#/karriere/bewerbung/initiativ']]
+          .map((t) => '<li><a class="tl__item" href="' + t[2] + '"' + (/^http/.test(t[2]) ? ' target="_blank" rel="noopener"' : '') + '><div class="tl__inner"><div class="tl__txt"><h3>' + esc(t[0]) + ' </h3><p>' + esc(t[1]) + '</p></div></div>' + icon('arrow', 'tl__arrow') + '</a></li>').join('') + '</ul></section>' +
+        '<section id="jobs" style="grid-column:2/14"><h2 style="font-size:2.5rem;line-height:1.3;font-weight:700;margin-bottom:2.5rem">Aktuelle Stellen</h2><div id="jList"><div class="spin"></div></div><p id="jSrc" style="margin-top:1.5rem;font-size:.875rem;color:var(--grey-500)"></p></section></div>';
+      M.$$('a[href="#jobs"]', el).forEach((a) => { a.onclick = (e) => { e.preventDefault(); M.$('#jobs', el).scrollIntoView({ behavior: 'smooth' }); }; });
       const list = await M.Jobs.load();
       const grp = {};
       list.forEach((j) => { const k = j.kind === 'Ausbildung' ? 'Ausbildung' : catOf(j)[0]; (grp[k] = grp[k] || []).push(j); });
       M.$('#jSrc', el).textContent = list.length ? list.length + ' Angebote · live von mvbnet.de' : '';
-      M.$('#jList', el).innerHTML = Object.keys(grp).length ? Object.entries(grp).map(([k, js]) => '<h3 style="display:flex;align-items:center;gap:12px;margin:26px 0 14px;font-size:clamp(20px,2vw,26px)"><span class="ph-ic" style="width:40px;height:40px;border-radius:10px;background:var(--mvb-green);color:#fff;display:grid;place-items:center">' + icon(k === 'Ausbildung' ? 'rocket' : catOf(js[0])[1]) + '</span>' + esc(k) + '</h3><div class="jobs">' +
-        js.map((j) => '<a class="jcard" href="#/karriere/job/' + esc(j.kind === 'Ausbildung' ? 'a-' : 's-') + esc(j.slug) + '"><small>' + esc(j.kind) + '</small><b>' + esc(j.title) + '</b>' + icon('arrow', 'go') + '</a>').join('') + '</div>').join('') : '<p class="empty">Zurzeit konnten keine Stellen geladen werden. <a href="#/karriere/bewerbung/initiativ">Initiativ bewerben</a></p>';
+      M.$('#jList', el).innerHTML = Object.keys(grp).length ? '<div style="display:grid;gap:3rem">' + Object.entries(grp).map(([k, js]) => '<section style="display:grid;gap:1.25rem"><h3 class="hwi" style="font-size:1.5rem;font-weight:700;line-height:1.3;gap:1rem"><i style="width:2rem;height:2rem">' + icon(k === 'Ausbildung' ? 'rocket' : catOf(js[0])[1]) + '</i>' + esc(k) + '</h3>' +
+        '<ul style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr))">' + js.map((j) => '<li><a class="itc__item" style="min-height:4rem;padding:.25rem 1rem;border-radius:.75rem" href="#/karriere/job/' + (j.kind === 'Ausbildung' ? 'a-' : 's-') + esc(j.slug) + '"><span style="font-size:1rem;font-weight:700;line-height:1.3;flex:1">' + esc(j.title) + '</span>' + icon('arrow') + '</a></li>').join('') + '</ul></section>').join('') + '</div>'
+        : '<p class="empty">Zurzeit konnten keine Stellen geladen werden. <a href="#/karriere/bewerbung/initiativ">Initiativ bewerben</a></p>';
     }
   };
 
@@ -34,23 +41,41 @@
     const slug = key.replace(/^[as]-/, '');
     return list.find((j) => j.slug === slug && j.kind === kind) || list.find((j) => j.slug === slug) || null;
   }
+  /** Abschnitte der Stellenbeschreibung (aus dem Text der MVB-Seite) */
+  function jobSections(html) {
+    const doc = new DOMParser().parseFromString(C.cleanHtml(html), 'text/html');
+    const out = [];
+    let cur = { h: 'Unternehmensbeschreibung', html: '' };
+    [...doc.body.childNodes].forEach((n) => {
+      const t = (n.textContent || '').trim();
+      const head = /^(Das bieten wir( Ihnen| dir)?|Das erwartet (Sie|dich)|Das bringen Sie mit|Was du mitbringen solltest|Deine Möglichkeiten|Was du bei uns lernen kannst|Wie lange und wo|Noch Fragen\?|Interessiert\?|Dein Profil|Deine Aufgaben|Ihre Aufgaben|Sie bringen mit)[:\s]*$/i.exec(t);
+      if (head && t.length < 60) { if (cur.html.trim()) out.push(cur); cur = { h: t.replace(/:$/, ''), html: '' }; return; }
+      if (/^(Leidenschaft|Sie wollen mit)/.test(t)) return;
+      cur.html += n.outerHTML || (t ? '<p>' + esc(t) + '</p>' : '');
+    });
+    if (cur.html.trim()) out.push(cur);
+    return out;
+  }
 
   P.job = {
     title: 'Karriere', nav: 'karriere',
-    async render(el, args) {
-      el.innerHTML = '<div class="wrap"><div class="spin"></div></div>';
+    async render(el, args, shellEl) {
+      el.innerHTML = '<div class="g"><div class="spin"></div></div>';
       const j = await findJob(args[0] || '');
-      if (!j) { el.innerHTML = '<div class="wrap">' + C.crumbs([['Karriere', '#/karriere'], ['Stelle']]) + '<p class="empty">Diese Stelle ist nicht mehr ausgeschrieben.</p></div>'; return; }
+      if (!j) { el.innerHTML = C.crumbs([['Karriere', '#/karriere'], ['Stelle']], true) + '<div class="g"><p class="empty">Diese Stelle ist nicht mehr ausgeschrieben.</p></div>'; return; }
+      shellEl.classList.add('job-page');
       const cat = j.kind === 'Ausbildung' ? ['Ausbildung', 'rocket'] : catOf(j);
-      el.innerHTML = '<div class="wrap">' + C.crumbs([['Karriere', '#/karriere'], ['Jobsuche', '#/karriere'], [j.title]]) +
-        '<div class="jhero"><div><h3 style="display:flex;align-items:center;gap:10px;margin:10px 0 14px"><span style="width:30px;height:30px;border-radius:7px;background:var(--mvb-green);color:#fff;display:grid;place-items:center">' + icon(cat[1]) + '</span>' + esc(cat[0]) + '</h3>' +
-        '<small class="muted">' + esc(j.kind) + '</small><h1 style="font-size:clamp(26px,3.2vw,40px);margin:6px 0 0">' + esc(j.title) + '</h1>' +
-        '<ul class="jfacts"><li>' + icon('pin') + 'Magdeburger Verkehrsbetriebe GmbH &amp; Co. KG · Magdeburg</li><li>' + icon('euro') + 'Bezahlung nach TV-N LSA</li><li>' + icon('cal') + (j.kind === 'Ausbildung' ? 'Ausbildungsstart 1. September 2027' : 'Ab sofort') + '</li><li>' + icon('clock') + 'Vollzeit' + (j.kind === 'Ausbildung' ? ' · Übernahme-Garantie' : '') + '</li></ul>' +
-        '<a class="btn" href="#/karriere/bewerbung/' + esc(args[0]) + '">Jetzt bewerben</a>' +
-        '<article class="prose" style="margin-top:34px">' + C.cleanHtml(j.html) + '</article>' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)"><span>Wir freuen uns auf dich und deine Bewerbung!</span><a class="btn" href="#/karriere/bewerbung/' + esc(args[0]) + '">Jetzt bewerben</a></div></div>' +
-        '<aside class="contact"><h3><i>' + icon('phone') + '</i>Deine Ansprechperson</h3>' + (j.contact ? '<p><b>' + esc(j.contact) + '</b>' + (j.phone ? '<br>' + esc(j.phone) : '') + '</p>' : '<p>Personalabteilung der MVB</p>') +
-        (j.mail ? '<a class="btn ghost sm" style="width:100%" href="mailto:' + esc(j.mail) + '">' + icon('mail') + esc(j.mail) + '</a>' : '') + '</aside></div></div>';
+      const secs = jobSections(j.html);
+      const facts = [['pin', 'Magdeburger Verkehrsbetriebe GmbH & Co. KG · Magdeburg'], ['euro', j.kind === 'Ausbildung' ? 'Ausbildungsvergütung nach TV-N LSA' : 'Bezahlung nach TV-N LSA'],
+        ['cal', j.kind === 'Ausbildung' ? 'Übernahme nach erfolgreicher Ausbildung' : '30 Tage Urlaub, Heiligabend und Silvester frei'], ['clock', j.kind === 'Ausbildung' ? 'Ausbildungsstart 1. September 2027' : 'Vollzeit, ab sofort']];
+      el.innerHTML = C.crumbs([['Karriere', '#/karriere'], ['Jobsuche', '#/karriere'], [j.title]], true) +
+        '<div class="g job"><div class="job__main"><div class="job__box"><div class="job__cat hwi"><i>' + icon(cat[1]) + '</i><strong>' + esc(cat[0]) + '</strong></div>' +
+        '<h1 class="job__h1"><em>' + esc(j.kind) + '</em><span>' + esc(j.title) + '</span></h1><ul class="job__facts">' + facts.map((f) => '<li>' + icon(f[0]) + '<span>' + esc(f[1]) + '</span></li>').join('') + '</ul>' +
+        '<a class="btn btn--fill job__apply" href="#/karriere/bewerbung/' + esc(args[0]) + '">Jetzt bewerben</a></div>' +
+        '<div class="job__box">' + secs.map((x, i) => '<h2 class="job__h2">' + esc(x.h) + '</h2><div class="job__sec' + (i === 0 || /bieten/i.test(x.h) ? ' checks' : '') + '">' + x.html + '</div>').join('') +
+        '<div class="job__foot"><span>Wir freuen uns auf dich und deine Bewerbung!</span><a class="btn btn--fill" href="#/karriere/bewerbung/' + esc(args[0]) + '">Jetzt bewerben</a></div></div></div>' +
+        '<aside class="job__side"><address class="job__box job__contact"><h2 class="hwi"><i>' + icon('phone') + '</i><span>Deine Ansprechperson</span></h2><div class="job__people"><article><h3>' + esc(j.contact || 'Personalabteilung der MVB') + '</h3>' + (j.phone ? '<a href="tel:' + esc(j.phone.replace(/\s/g, '')) + '">' + esc(j.phone) + '</a>' : '') + '</article></div>' +
+        (j.mail ? '<a class="btn btn--outline btn--icon" href="mailto:' + esc(j.mail) + '">' + icon('mail') + esc(j.mail) + '</a>' : '<a class="btn btn--outline btn--icon" href="https://www.mvbnet.de/karriere/stellenangebote/" target="_blank" rel="noopener">' + icon('mail') + 'Kontakt</a>') + '</address></aside></div>';
     }
   };
 
@@ -71,7 +96,7 @@
 
   P.bewerbung = {
     title: 'Bewerbung', nav: 'karriere',
-    async render(el, args) {
+    async render(el, args, shellEl) {
       const key = args[0] || 'initiativ';
       const job = key === 'initiativ' ? null : await findJob(key);
       const jobTitle = job ? job.title : 'Initiativbewerbung';
@@ -80,9 +105,10 @@
       S.files = {};
       S.step = Math.min(S.step || 0, STEPS.length - 1);
 
-      el.innerHTML = '<div class="wrap">' + C.crumbs([['Karriere', '#/karriere'], job ? [job.title, '#/karriere/job/' + key] : ['Initiativbewerbung', '#/karriere'], ['Bewerbung']]) +
-        C.phead('Deine Bewerbung', esc(jobTitle) + ' – in fünf Schritten direkt hier bei der MVB. Dein Entwurf wird auf diesem Gerät zwischengespeichert.') +
-        '<div class="apply"><ol class="steps" id="bSteps"></ol><div><div class="progress"><span id="bProg"></span></div><form id="bForm" novalidate></form></div></div></div>';
+      shellEl.classList.add('form-page');
+      el.innerHTML = C.crumbs([['Karriere', '#/karriere'], job ? [job.title, '#/karriere/job/' + key] : ['Initiativbewerbung', '#/karriere'], ['Bewerbung']], true) +
+        '<div class="g" style="margin-top:2rem"><div class="fb__main"><div class="fb__box apply"><h1 style="text-align:left;margin-bottom:.5rem">Deine Bewerbung</h1><p class="step-p">' + esc(jobTitle) + ' – in fünf Schritten direkt hier bei der MVB. Dein Entwurf wird auf diesem Gerät zwischengespeichert.</p>' +
+        '<ol class="steps" id="bSteps"></ol><div class="prog"><span id="bProg"></span></div><form id="bForm" novalidate></form></div></div></div>';
       const form = M.$('#bForm', el);
       const save = () => M.store.set(draftKey, { step: S.step, f: S.f });
 
@@ -91,67 +117,67 @@
         const v = S.f[name] != null ? S.f[name] : o.value || '';
         const req = o.req ? ' <em>*</em>' : '';
         let input;
-        if (o.type === 'select') input = '<select class="inp" name="' + name + '"' + (o.req ? ' required' : '') + '><option value="">Bitte wählen</option>' + o.opts.map((x) => '<option' + (x === v ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>';
-        else if (o.type === 'textarea') input = '<textarea class="inp" name="' + name + '"' + (o.req ? ' required' : '') + (o.min ? ' minlength="' + o.min + '"' : '') + ' placeholder="' + esc(o.ph || '') + '">' + esc(v) + '</textarea>';
-        else input = '<input class="inp" type="' + (o.type || 'text') + '" name="' + name + '" value="' + esc(v) + '"' + (o.req ? ' required' : '') + (o.auto ? ' autocomplete="' + o.auto + '"' : '') + (o.pattern ? ' pattern="' + o.pattern + '"' : '') + (o.max ? ' max="' + o.max + '"' : '') + ' placeholder="' + esc(o.ph || '') + '">';
-        return '<label class="fitem' + (o.full ? ' full' : '') + '"><span>' + esc(label) + req + '</span>' + input + (o.hint ? '<small class="muted">' + esc(o.hint) + '</small>' : '') + '<span class="err"></span></label>';
+        if (o.type === 'select') input = '<select name="' + name + '"' + (o.req ? ' required' : '') + '><option value="">Bitte wählen</option>' + o.opts.map((x) => '<option' + (x === v ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>';
+        else if (o.type === 'textarea') input = '<textarea name="' + name + '"' + (o.req ? ' required' : '') + (o.min ? ' minlength="' + o.min + '"' : '') + ' placeholder="' + esc(o.ph || '') + '">' + esc(v) + '</textarea>';
+        else input = '<input type="' + (o.type || 'text') + '" name="' + name + '" value="' + esc(v) + '"' + (o.req ? ' required' : '') + (o.auto ? ' autocomplete="' + o.auto + '"' : '') + (o.pattern ? ' pattern="' + o.pattern + '"' : '') + (o.max ? ' max="' + o.max + '"' : '') + ' placeholder="' + esc(o.ph || '') + '">';
+        return '<label class="fld' + (o.full ? ' full' : '') + '"><span class="fld__in"><span>' + esc(label) + req + '</span>' + input + '</span>' + (o.hint ? '<small class="fld__hint">' + esc(o.hint) + '</small>' : '') + '<span class="fld__err"></span></label>';
       };
 
       const VIEWS = {
-        daten: () => '<div class="panel"><h2>Persönliche Daten</h2><p>Mit <em style="color:var(--st-late);font-style:normal">*</em> markierte Felder sind Pflichtfelder.</p><div class="fgrid">' +
-          '<div class="fitem full"><span>Anrede <em>*</em></span><div class="radio-row">' + ['Frau', 'Herr', 'Divers', 'Keine Angabe'].map((x) => '<label><input type="radio" name="anrede" value="' + x + '"' + (S.f.anrede === x ? ' checked' : '') + ' required>' + x + '</label>').join('') + '</div><span class="err"></span></div>' +
+        daten: () => '<h2 class="step-h">Persönliche Daten</h2><p class="step-p">Mit * markierte Felder sind Pflichtfelder.</p><div class="fgrid">' +
+          '<div class="fld full"><span class="rad-label">Anrede *</span><div class="rad">' + ['Frau', 'Herr', 'Divers', 'Keine Angabe'].map((x) => '<label><input type="radio" name="anrede" value="' + x + '"' + (S.f.anrede === x ? ' checked' : '') + ' required>' + x + '</label>').join('') + '</div><span class="fld__err"></span></div>' +
           field('vorname', 'Vorname', { req: true, auto: 'given-name' }) + field('nachname', 'Nachname', { req: true, auto: 'family-name' }) +
           field('geburt', 'Geburtsdatum', { req: true, type: 'date', max: new Date().toISOString().slice(0, 10) }) + field('nation', 'Staatsangehörigkeit', { auto: 'off', ph: 'z. B. deutsch' }) +
           field('mail', 'E-Mail', { req: true, type: 'email', auto: 'email' }) + field('tel', 'Telefon', { req: true, type: 'tel', auto: 'tel', ph: '0170 1234567' }) +
           field('strasse', 'Straße und Hausnummer', { req: true, auto: 'street-address', full: true }) +
-          field('plz', 'PLZ', { req: true, auto: 'postal-code', pattern: '[0-9]{5}', ph: '39104' }) + field('ort', 'Ort', { req: true, auto: 'address-level2', ph: 'Magdeburg' }) + '</div></div>',
-        quali: () => '<div class="panel"><h2>Qualifikation</h2><p>Erzähl uns, was du mitbringst.</p><div class="fgrid">' +
+          field('plz', 'PLZ', { req: true, auto: 'postal-code', pattern: '[0-9]{5}', ph: '39104' }) + field('ort', 'Ort', { req: true, auto: 'address-level2', ph: 'Magdeburg' }) + '</div>',
+        quali: () => '<h2 class="step-h">Qualifikation</h2><p class="step-p">Erzähl uns, was du mitbringst.</p><div class="fgrid">' +
           field('abschluss', 'Höchster Schulabschluss', { req: true, type: 'select', opts: ['Hauptschulabschluss', 'Realschulabschluss', 'Fachhochschulreife', 'Abitur', 'Abgeschlossene Berufsausbildung', 'Studium', 'Noch in der Schule'] }) +
           field('schule', 'Schule / Hochschule', { ph: 'Name und Ort' }) + field('jahr', 'Abschlussjahr', { type: 'number', ph: '2026' }) +
           field('eintritt', 'Frühester Eintrittstermin', { req: true, type: 'date' }) +
-          '<div class="fitem full"><span>Führerschein</span><div class="radio-row">' + ['Keiner', 'B', 'BE', 'C/CE', 'D/DE'].map((x) => '<label><input type="checkbox" name="fs_' + x + '"' + (S.f['fs_' + x] ? ' checked' : '') + '>' + x + '</label>').join('') + '</div></div>' +
+          '<div class="fld full"><span class="rad-label">Führerschein</span><div class="rad">' + ['Keiner', 'B', 'BE', 'C/CE', 'D/DE'].map((x) => '<label><input type="checkbox" name="fs_' + x + '"' + (S.f['fs_' + x] ? ' checked' : '') + '>' + x + '</label>').join('') + '</div></div>' +
           field('erfahrung', 'Berufserfahrung', { type: 'textarea', full: true, ph: 'Stationen, Praktika, Nebenjobs …' }) +
-          field('quelle', 'Wie bist du auf uns aufmerksam geworden?', { type: 'select', opts: ['MVB-Webseite', 'Social Media', 'Job-Messe', 'Freunde / Familie', 'Werbung in Bahn oder Bus', 'Sonstiges'], full: true }) + '</div></div>',
+          field('quelle', 'Wie bist du auf uns aufmerksam geworden?', { type: 'select', opts: ['MVB-Webseite', 'Social Media', 'Job-Messe', 'Freunde / Familie', 'Werbung in Bahn oder Bus', 'Sonstiges'], full: true }) + '</div>',
         unterlagen: () => {
           const groups = [];
           DOCS.forEach((d) => { let g = groups.find((x) => x.t === d.group); if (!g) { g = { t: d.group, list: [] }; groups.push(g); } g.list.push(d); });
-          return '<div class="panel"><h2>Unterlagen</h2><p>PDF, JPG oder PNG, je Datei höchstens 10 MB. Bei Zeugnissen bitte <b>Vorder- und Rückseite</b> einzeln hochladen.</p>' +
-            groups.map((g) => '<h3 class="uptitle">' + icon('file') + esc(g.t) + '</h3><div class="ups">' + g.list.map((d) => upBox(d)).join('') + '</div>').join('') + '</div>';
+          return '<h2 class="step-h">Unterlagen</h2><p class="step-p">PDF, JPG oder PNG, je Datei höchstens 10 MB. Bei Zeugnissen bitte <b>Vorder- und Rückseite</b> einzeln hochladen.</p>' +
+            groups.map((g) => '<h3 class="ups-h">' + icon('file') + esc(g.t) + '</h3><div class="ups">' + g.list.map((d) => upBox(d)).join('') + '</div>').join('');
         },
-        motivation: () => '<div class="panel"><h2>Motivation</h2><p>Warum möchtest du zur MVB? Schreib es hier hinein oder lade dein Anschreiben hoch.</p><div class="fgrid">' +
+        motivation: () => '<h2 class="step-h">Motivation</h2><p class="step-p">Warum möchtest du zur MVB? Schreib es hier hinein oder lade dein Anschreiben hoch.</p><div class="fgrid">' +
           field('motiv', 'Motivationsschreiben', { type: 'textarea', full: true, min: 200, ph: 'Liebes Team der MVB, …', hint: 'Mindestens 200 Zeichen – oder unten ein Anschreiben hochladen.' }) +
-          '<div class="fitem full"><span class="muted" id="motivCount" style="font-weight:500;font-size:13px"></span></div>' +
+          '<div class="full" id="motivCount" style="font-size:.875rem;color:var(--grey-500)"></div>' +
           '<div class="full"><div class="ups">' + upBox({ k: 'anschreiben', t: 'Anschreiben (optional, statt Text)', req: false }) + '</div></div>' +
-          field('staerken', 'Deine drei größten Stärken', { full: true, ph: 'z. B. zuverlässig, teamfähig, ruhig in Stresssituationen' }) + '</div></div>',
+          field('staerken', 'Deine drei größten Stärken', { full: true, ph: 'z. B. zuverlässig, teamfähig, ruhig in Stresssituationen' }) + '</div>',
         pruefen: () => {
           const fs = ['Keiner', 'B', 'BE', 'C/CE', 'D/DE'].filter((x) => S.f['fs_' + x]).join(', ') || '–';
           const row = (k, v) => '<dt>' + esc(k) + '</dt><dd>' + esc(v || '–') + '</dd>';
-          return '<div class="panel review"><h2>Prüfen &amp; Absenden</h2><p>Bitte prüfe deine Angaben.</p>' +
-            '<h3>Persönliche Daten <button type="button" class="btn ghost sm" data-go="0">Ändern</button></h3><dl>' + row('Name', [S.f.anrede, S.f.vorname, S.f.nachname].filter(Boolean).join(' ')) + row('Geburtsdatum', S.f.geburt ? M.fmtDate(S.f.geburt) : '') + row('E-Mail', S.f.mail) + row('Telefon', S.f.tel) + row('Adresse', [S.f.strasse, [S.f.plz, S.f.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ')) + '</dl>' +
-            '<h3>Qualifikation <button type="button" class="btn ghost sm" data-go="1">Ändern</button></h3><dl>' + row('Abschluss', S.f.abschluss) + row('Schule', [S.f.schule, S.f.jahr].filter(Boolean).join(' · ')) + row('Eintritt ab', S.f.eintritt ? M.fmtDate(S.f.eintritt) : '') + row('Führerschein', fs) + '</dl>' +
-            '<h3>Unterlagen <button type="button" class="btn ghost sm" data-go="2">Ändern</button></h3><dl>' + DOCS.concat([{ k: 'anschreiben', t: 'Anschreiben' }]).map((d) => row(d.t, S.files[d.k] ? S.files[d.k].name + ' (' + Math.round(S.files[d.k].size / 1024) + ' KB)' : (d.req ? 'fehlt' : '–'))).join('') + '</dl>' +
-            '<h3>Motivation <button type="button" class="btn ghost sm" data-go="3">Ändern</button></h3><p style="white-space:pre-wrap;font-size:14.5px;color:var(--text-soft);margin-bottom:16px">' + esc((S.f.motiv || (S.files.anschreiben ? 'Anschreiben hochgeladen.' : '–')).slice(0, 600)) + (S.f.motiv && S.f.motiv.length > 600 ? ' …' : '') + '</p>' +
-            '<label class="check"><input type="checkbox" name="ds" required' + (S.f.ds ? ' checked' : '') + '><span>Ich habe die <a href="https://www.mvbnet.de/datenschutzbestimmungen/" target="_blank" rel="noopener">Datenschutzhinweise</a> gelesen und bin mit der Verarbeitung meiner Daten zum Zweck der Bewerbung einverstanden. <em style="color:var(--st-late);font-style:normal">*</em></span></label>' +
-            '<label class="check" style="margin-top:10px"><input type="checkbox" name="wahr" required' + (S.f.wahr ? ' checked' : '') + '><span>Meine Angaben sind vollständig und wahrheitsgemäß. <em style="color:var(--st-late);font-style:normal">*</em></span></label>' +
-            '<p class="err" id="sendErr" style="color:var(--st-late);margin-top:10px"></p></div>';
+          return '<div class="review"><h2 class="step-h">Prüfen &amp; Absenden</h2><p class="step-p">Bitte prüfe deine Angaben.</p>' +
+            '<h3>Persönliche Daten <button type="button" class="btn btn--outline btn--sm" data-go="0">Ändern</button></h3><dl>' + row('Name', [S.f.anrede, S.f.vorname, S.f.nachname].filter(Boolean).join(' ')) + row('Geburtsdatum', S.f.geburt ? M.fmtDate(S.f.geburt) : '') + row('E-Mail', S.f.mail) + row('Telefon', S.f.tel) + row('Adresse', [S.f.strasse, [S.f.plz, S.f.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ')) + '</dl>' +
+            '<h3>Qualifikation <button type="button" class="btn btn--outline btn--sm" data-go="1">Ändern</button></h3><dl>' + row('Abschluss', S.f.abschluss) + row('Schule', [S.f.schule, S.f.jahr].filter(Boolean).join(' · ')) + row('Eintritt ab', S.f.eintritt ? M.fmtDate(S.f.eintritt) : '') + row('Führerschein', fs) + '</dl>' +
+            '<h3>Unterlagen <button type="button" class="btn btn--outline btn--sm" data-go="2">Ändern</button></h3><dl>' + DOCS.concat([{ k: 'anschreiben', t: 'Anschreiben' }]).map((d) => row(d.t, S.files[d.k] ? S.files[d.k].name + ' (' + Math.round(S.files[d.k].size / 1024) + ' KB)' : (d.req ? 'fehlt' : '–'))).join('') + '</dl>' +
+            '<h3>Motivation <button type="button" class="btn btn--outline btn--sm" data-go="3">Ändern</button></h3><p style="white-space:pre-wrap;font-size:1rem;color:var(--grey-500);margin-bottom:1.5rem">' + esc((S.f.motiv || (S.files.anschreiben ? 'Anschreiben hochgeladen.' : '–')).slice(0, 600)) + (S.f.motiv && S.f.motiv.length > 600 ? ' …' : '') + '</p>' +
+            '<label class="chk fld"><input type="checkbox" name="ds" required' + (S.f.ds ? ' checked' : '') + '><span>Ich habe die <a href="https://www.mvbnet.de/datenschutzbestimmungen/" target="_blank" rel="noopener">Datenschutzhinweise</a> gelesen und bin mit der Verarbeitung meiner Daten zum Zweck der Bewerbung einverstanden. *</span></label>' +
+            '<label class="chk fld" style="margin-top:1rem"><input type="checkbox" name="wahr" required' + (S.f.wahr ? ' checked' : '') + '><span>Meine Angaben sind vollständig und wahrheitsgemäß. *</span></label>' +
+            '<p class="fld__err" id="sendErr"></p></div>';
         }
       };
       function upBox(d) {
         const f = S.files[d.k];
-        return '<label class="upbox' + (f ? ' has' : '') + '" data-up="' + d.k + '">' + (f && f.preview ? '<img class="prev" src="' + f.preview + '" alt="">' : '') +
+        return '<label class="up' + (f ? ' has' : '') + '" data-up="' + d.k + '">' + (f && f.preview ? '<img class="prev" src="' + f.preview + '" alt="">' : '') +
           '<input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-label="' + esc(d.t) + '">' + icon(f ? 'check' : 'upload') +
-          '<b>' + esc(d.t) + (d.req ? ' <em style="color:var(--st-late);font-style:normal">*</em>' : '') + '</b><small>' + (f ? esc(f.name) + ' · ' + Math.round(f.size / 1024) + ' KB' : 'Datei auswählen oder hierher ziehen') + '</small>' +
-          (f ? '<button type="button" class="btn ghost sm rm" data-rm="' + d.k + '">' + icon('trash') + 'Entfernen</button>' : '') + '</label>';
+          '<b>' + esc(d.t) + (d.req ? ' *' : '') + '</b><small>' + (f ? esc(f.name) + ' · ' + Math.round(f.size / 1024) + ' KB' : 'Datei auswählen oder hierher ziehen') + '</small>' +
+          (f ? '<button type="button" class="btn btn--outline btn--sm btn--icon rm" data-rm="' + d.k + '">' + icon('trash') + 'Entfernen</button>' : '') + '</label>';
       }
 
       function draw() {
         M.$('#bSteps', el).innerHTML = STEPS.map((s, i) => '<li class="' + (i === S.step ? 'on' : i < S.step ? 'done' : '') + '" data-go="' + i + '"><i>' + (i < S.step ? '✓' : i + 1) + '</i><span>' + s[1] + '</span></li>').join('');
         M.$('#bProg', el).style.width = ((S.step + 1) / STEPS.length * 100) + '%';
-        form.innerHTML = VIEWS[STEPS[S.step][0]]() + '<div class="navrow">' + (S.step ? '<button type="button" class="btn ghost" data-nav="-1">' + icon('arrowL') + 'Zurück</button>' : '<a class="btn ghost" href="' + (job ? '#/karriere/job/' + key : '#/karriere') + '">' + icon('arrowL') + 'Zur Stelle</a>') +
-          (S.step < STEPS.length - 1 ? '<button type="submit" class="btn">Weiter' + icon('arrow') + '</button>' : '<button type="submit" class="btn">' + icon('check') + 'Bewerbung absenden</button>') + '</div>';
+        form.innerHTML = VIEWS[STEPS[S.step][0]]() + '<div class="navrow">' + (S.step ? '<button type="button" class="btn btn--outline btn--icon" data-nav="-1">' + icon('arrowL') + 'Zurück</button>' : '<a class="btn btn--outline btn--icon" href="' + (job ? '#/karriere/job/' + key : '#/karriere') + '">' + icon('arrowL') + 'Zur Stelle</a>') +
+          (S.step < STEPS.length - 1 ? '<button type="submit" class="btn btn--fill">Weiter' + icon('arrow') + '</button>' : '<button type="submit" class="btn btn--fill btn--icon">' + icon('check') + 'Bewerbung absenden</button>') + '</div>';
         const m = form.motiv;
         if (m) { const upd = () => { M.$('#motivCount', el).textContent = m.value.length + ' Zeichen' + (m.value.length < 200 ? ' (noch ' + (200 - m.value.length) + ')' : ' ✓'); }; m.addEventListener('input', upd); upd(); }
-        window.scrollTo({ top: Math.max(0, M.$('.apply', el).offsetTop - 110), behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
       function collect() {
         new FormData(form).forEach((v, k) => { if (typeof v === 'string') S.f[k] = v; });
@@ -160,25 +186,25 @@
       }
       function validate() {
         let ok = true;
-        M.$$('.fitem', form).forEach((w) => w.classList.remove('bad'));
+        M.$$('.fld', form).forEach((w) => w.classList.remove('bad'));
         M.$$('[required]', form).forEach((inp) => {
-          const w = inp.closest('.fitem') || inp.closest('.check');
+          const w = inp.closest('.fld');
           let bad = false;
           if (inp.type === 'radio') bad = !form.querySelector('input[name="' + inp.name + '"]:checked');
           else if (inp.type === 'checkbox') bad = !inp.checked;
           else bad = !inp.checkValidity();
-          if (bad) { ok = false; if (w) { w.classList.add('bad'); const e = M.$('.err', w); if (e) e.textContent = inp.type === 'email' ? 'Bitte eine gültige E-Mail-Adresse eingeben.' : inp.name === 'plz' ? 'Bitte eine fünfstellige PLZ eingeben.' : 'Bitte ausfüllen.'; } }
+          if (bad) { ok = false; if (w) { w.classList.add('bad'); const e = M.$('.fld__err', w); if (e) e.textContent = inp.type === 'email' ? 'Bitte eine gültige E-Mail-Adresse eingeben.' : inp.name === 'plz' ? 'Bitte eine fünfstellige PLZ eingeben.' : 'Bitte ausfüllen.'; } }
         });
         if (STEPS[S.step][0] === 'daten' && S.f.geburt) {
           const age = (Date.now() - new Date(S.f.geburt)) / (365.25 * 864e5);
-          if (age < 14) { ok = false; const w = form.geburt.closest('.fitem'); w.classList.add('bad'); M.$('.err', w).textContent = 'Du musst mindestens 14 Jahre alt sein.'; }
+          if (age < 14) { ok = false; const w = form.geburt.closest('.fld'); w.classList.add('bad'); M.$('.fld__err', w).textContent = 'Du musst mindestens 14 Jahre alt sein.'; }
         }
         if (STEPS[S.step][0] === 'unterlagen') {
           const miss = DOCS.filter((d) => d.req && !S.files[d.k]);
           if (miss.length) { ok = false; M.toast('Bitte noch hochladen: ' + miss.map((d) => d.t).join(', ')); miss.forEach((d) => M.$('[data-up="' + d.k + '"]', form).style.borderColor = 'var(--st-late)'); }
         }
         if (STEPS[S.step][0] === 'motivation' && (S.f.motiv || '').trim().length < 200 && !S.files.anschreiben) {
-          ok = false; const w = form.motiv.closest('.fitem'); w.classList.add('bad'); M.$('.err', w).textContent = 'Bitte mindestens 200 Zeichen schreiben oder ein Anschreiben hochladen.';
+          ok = false; const w = form.motiv.closest('.fld'); w.classList.add('bad'); M.$('.fld__err', w).textContent = 'Bitte mindestens 200 Zeichen schreiben oder ein Anschreiben hochladen.';
         }
         if (!ok) { const first = M.$('.bad', form); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
         return ok;
@@ -207,10 +233,10 @@
         const sent = M.store.get('bewerbungen', []);
         sent.unshift({ ref, job: jobTitle, date: new Date().toISOString(), mode });
         M.store.set('bewerbungen', sent.slice(0, 20));
-        M.$('.apply', el).innerHTML = '<div class="panel done-box" style="grid-column:1/-1"><div class="ok">' + icon('check') + '</div><h2>Vielen Dank, ' + esc(S.f.vorname || '') + '!</h2>' +
-          '<p style="margin:10px auto 6px;max-width:560px;color:var(--text-soft)">Deine Bewerbung als <b>' + esc(jobTitle) + '</b> ' + (mode === 'sent' ? 'ist bei uns eingegangen.' : 'ist vollständig.') + ' Deine Referenznummer: <b>' + ref + '</b></p>' +
-          (mode === 'local' ? '<p class="muted" style="font-size:13px;max-width:560px;margin:0 auto">Vorschau-Modus: Es ist noch kein Empfänger für Bewerbungen eingerichtet (CONFIG.bewerbungEndpoint). Deine Daten haben dieses Gerät nicht verlassen.</p>' : '<p class="muted" style="font-size:13px">Wir melden uns per E-Mail bei dir.</p>') +
-          '<p style="margin-top:22px"><a class="btn" href="#/karriere">Weitere Stellen ansehen</a></p></div>';
+        M.$('.apply', el).innerHTML = '<div class="done"><div class="done__ok">' + icon('check') + '</div><h1>Vielen Dank, ' + esc(S.f.vorname || '') + '!</h1>' +
+          '<p class="step-p">Deine Bewerbung als <b>' + esc(jobTitle) + '</b> ' + (mode === 'sent' ? 'ist bei uns eingegangen.' : 'ist vollständig.') + ' Deine Referenznummer: <b>' + ref + '</b></p>' +
+          (mode === 'local' ? '<p class="note" style="text-align:left">Vorschau-Modus: Es ist noch kein Empfänger für Bewerbungen eingerichtet (CONFIG.bewerbungEndpoint). Deine Daten haben dieses Gerät nicht verlassen.</p>' : '<p class="step-p">Wir melden uns per E-Mail bei dir.</p>') +
+          '<p style="margin-top:2rem"><a class="btn btn--fill" href="#/karriere">Weitere Stellen ansehen</a></p></div>';
       }
 
       form.addEventListener('submit', (e) => {

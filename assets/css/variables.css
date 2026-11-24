@@ -1,63 +1,65 @@
 /* =====================================================================
    MVB – ALLE FARBEN AN EINER STELLE
-   Hier einmal ändern, dann gilt es für die ganze Webseite
-   (Seiten, Karten, Linien, Übergangs-Animation, Bewerbung, Dark Mode).
+   Aufbau, Maße und Abstände entsprechen 1:1 dem BVG-Vorbild.
+   Überall, wo die BVG Gelb nutzt, steht hier die MVB-Hauptfarbe.
    ===================================================================== */
 
 :root {
-  /* ---------- MVB-Hauptfarbe (Grün) ----------
-     Falls das Grün nicht stimmt: nur --mvb-green (und bei Bedarf die
-     Abstufungen darunter) anpassen. */
-  --mvb-green: #00A04B;          /* Hauptfarbe */
-  --mvb-green-600: #008C41;      /* Hover / gedrückt */
-  --mvb-green-700: #006F34;      /* dunkle Flächen, Verläufe */
-  --mvb-green-800: #00552A;      /* sehr dunkel */
-  --mvb-green-300: #6CCB8F;      /* hell */
-  --mvb-green-100: #D7F1E0;      /* sehr hell (Hinweise, Badges) */
-  --mvb-green-50: #EEF8F2;       /* Hintergrund-Tönung */
-  --mvb-on-green: #FFFFFF;       /* Schrift auf Grün */
-  --mvb-accent: #C8D400;         /* Akzent (Gelbgrün, z. B. Hinweis-Marker) */
+  /* ---------- MVB-Hauptfarbe (ersetzt das BVG-Gelb #F0D722) ----------
+     Falls das Grün nicht stimmt: nur diese Zeilen ändern. */
+  --mvb-green: #00A04B;            /* Hauptfarbe (Buttons, Kacheln, Marker) */
+  --mvb-green-hover: #B9E4C9;      /* helle Fläche beim Überfahren von Kacheln (BVG: #F1E48E) */
+  --mvb-green-dark: #00703A;       /* Übergangs-Animation, dunkle Flächen */
+  --on-green: #252525;             /* Schrift auf Grün (wie bei der BVG: dunkel auf Akzent) */
 
-  /* ---------- Flächen & Schrift (heller Modus) ---------- */
-  --bg: #FFFFFF;
-  --bg-soft: #F4F6F5;
-  --bg-elev: #FFFFFF;
-  --card: #FFFFFF;
-  --line: #E2E6E4;
-  --line-strong: #C9CFCC;
-  --text: #1B1F1D;
-  --text-soft: #4A524E;
-  --text-mute: #78807C;
-  --link: var(--mvb-green-700);
-  --shadow: 0 10px 30px -14px rgba(16, 40, 28, .28);
-  --shadow-strong: 0 22px 50px -20px rgba(16, 40, 28, .45);
-  --overlay: rgba(12, 20, 16, .55);
-  --footer-bg: #1E2421;
-  --footer-text: rgba(255, 255, 255, .72);
-  --footer-head: #FFFFFF;
+  /* ---------- Graustufen & Grundfarben (BVG-Palette) ---------- */
+  --white: #FFFFFF;
+  --grey-5: #F3F3F3;
+  --grey-25: #E1E1E1;
+  --grey-50: #CCCCCC;
+  --grey-75: #B0B0B0;
+  --grey-100: #9A9A9A;
+  --grey-300: #757575;
+  --grey-500: #585858;
+  --grey-600: #424242;
+  --grey-900: #252525;
+  --link: #2A4EC0;                 /* Textlinks & Fokusrahmen */
+  --info-bg: #D8E3EF;              /* Hinweis / Tag „Umleitung“ */
+  --info-fg: #004573;
+  --warn-bg: #FFDAD1;              /* Tag „Störung“ */
+  --warn-fg: #8C0006;
+  --success-bg: #CFE7D1;
+  --success-fg: #254A2F;
+  --coach-bg: #D8E3EF;             /* Sprechblase „Hast du Fragen?“ */
+  --coach-fg: #004573;
+
+  /* ---------- Flächen ---------- */
+  --bg: var(--white);
+  --bg-subtle: var(--grey-5);
+  --fg: var(--grey-900);
+  --fg-subtle: var(--grey-500);
+  --border: var(--grey-50);
+  --border-strong: var(--grey-300);
+  --footer-bg: var(--grey-600);
+  --footer-fg: var(--grey-50);
+  --footer-head: var(--grey-25);
+
+  /* ---------- Schatten (BVG shadow-100 … 300) ---------- */
+  --shadow-color: rgba(37, 37, 37, .07);
+  --shadow-100: 0 1px 1px var(--shadow-color), 0 3px 4px 1px var(--shadow-color), 0 4px 9px 2px var(--shadow-color);
+  --shadow-200: 0 2px 4px 2px var(--shadow-color), 0 8px 8px 1px var(--shadow-color), 0 14px 28px 3px var(--shadow-color);
+  --shadow-300: 0 4px 8px 4px var(--shadow-color), 0 16px 16px 2px var(--shadow-color), 0 32px 64px 5px var(--shadow-color);
 
   /* ---------- Status (Muvit-System) ---------- */
-  --st-ontime: #1E8E3E;          /* pünktlich */
-  --st-early: #2F6FA8;           /* früher / Verfrühung */
-  --st-slight: #D9661F;          /* leichte Verspätung (1–4 Min.) */
-  --st-late: #C62828;            /* Verspätung (ab 5 Min.) / fällt aus */
-  --st-plan: #78807C;            /* planmäßig, keine Echtzeit */
-  --warn: #F4BA3C;
-  --info-bg: #E7F0FA;
-  --info-text: #23507F;
-  --tag-detour-bg: #DCEBFA;      /* Tag „Umleitung“ */
-  --tag-detour: #1F5C99;
-  --tag-sev-bg: #FBE3E1;         /* Tag „Ersatzverkehr“ */
-  --tag-sev: #A6271D;
-  --tag-closed-bg: #FFF1CC;      /* Tag „Sperrung“ */
-  --tag-closed: #7A5600;
+  --st-ontime: #1E8E3E;
+  --st-early: #2F6FA8;
+  --st-slight: #D9661F;
+  --st-late: #C62828;
+  --st-plan: #757575;
 
-  /* ---------- Verkehrsmittel-Zeichen (wie in Muvit) ---------- */
-  --mode-tram: #BA2619;          /* „Tram“-Quadrat */
-  --mode-bus: #4B1C76;           /* „Bus“-Kreis */
-  --mode-night: #1E3264;
-
-  /* ---------- Linienfarben der MVB (aus Muvit) ---------- */
+  /* ---------- Verkehrsmittel-Zeichen & Linienfarben (aus Muvit) ---------- */
+  --mode-tram: #BA2619;
+  --mode-bus: #4B1C76;
   --line-tram-1: #A42D51;
   --line-tram-2: #59639F;
   --line-tram-3: #EAD248;
@@ -68,77 +70,71 @@
   --line-tram-9: #2C6352;
   --line-tram-10: #2C93B8;
   --line-tram-13: #191919;
-  --line-tram-15: #7A7A7E;       /* Sonderlinie */
-  --line-night: #1E3264;         /* Nachtlinien N1 … N9 */
-  --line-bus: #3A3F37;           /* alle Buslinien (Zeichen) */
-  --line-bus-map: #4B1C76;       /* Buslinien auf der Karte */
-  --line-sev: #BA2715;           /* Ersatzverkehr (SEV) */
-  --line-walk: #7A7A7E;          /* Fußweg */
-  --line-closed: #9AA19D;        /* gesperrter Abschnitt (ausgegraut) */
-  --line-cross: #D7261E;         /* Sperr-Kreuz */
+  --line-tram-15: #7A7A7E;
+  --line-night: #1E3264;
+  --line-bus: #3A3F37;
+  --line-bus-map: #4B1C76;
+  --line-sev: #BA2715;
+  --line-walk: #7A7A7E;
+  --line-closed: #9AA19D;
+  --line-cross: #D7261E;
 
-  /* ---------- Übergangs-Animation (Streifen) ---------- */
-  --tr-stripe-1: var(--mvb-accent);
-  --tr-stripe-2: var(--mvb-green-300);
+  /* ---------- Seitenwechsel-Animation (Streifen) ---------- */
+  --tr-stripe-1: #C8D400;
+  --tr-stripe-2: #6CCB8F;
   --tr-stripe-3: var(--mvb-green);
-  --tr-screen-from: var(--mvb-green-700);
+  --tr-screen-from: var(--mvb-green-dark);
   --tr-screen-to: var(--mvb-green);
   --tr-glow: #2ED47A;
 }
 
 /* =====================================================================
-   SCROLLBAR – eigener Stil, Farbe nach Laune ändern
-   (hell und dunkel getrennt)
+   SCROLLBAR – eigener Stil, Farbe nach Laune ändern (hell / dunkel getrennt)
    ===================================================================== */
 :root {
   --scrollbar-size: 12px;
   --scrollbar-radius: 10px;
-  /* heller Modus */
-  --scrollbar-track: #EEF3F0;
+  --scrollbar-track: #F3F3F3;
   --scrollbar-thumb: #00A04B;
-  --scrollbar-thumb-hover: #008C41;
-  --scrollbar-thumb-border: #EEF3F0;
+  --scrollbar-thumb-hover: #00703A;
+  --scrollbar-thumb-border: #F3F3F3;
 }
-/* dunkler Modus: eigene Scrollbar-Farbe */
 :root[data-theme="dark"] {
-  --scrollbar-track: #121715;
+  --scrollbar-track: #151917;
   --scrollbar-thumb: #2ED47A;
   --scrollbar-thumb-hover: #6CE6A2;
-  --scrollbar-thumb-border: #121715;
+  --scrollbar-thumb-border: #151917;
 }
 
 /* =====================================================================
-   DARK MODE – Flächen & Schrift
+   DARK MODE
    ===================================================================== */
 :root[data-theme="dark"] {
-  --bg: #0F1412;
-  --bg-soft: #161D1A;
-  --bg-elev: #1A221F;
-  --card: #1A221F;
-  --line: #2A3430;
-  --line-strong: #3A4641;
-  --text: #EEF3F0;
-  --text-soft: #BAC4BF;
-  --text-mute: #86918C;
-  --link: #6CE6A2;
-  --shadow: 0 10px 30px -14px rgba(0, 0, 0, .7);
-  --shadow-strong: 0 22px 50px -20px rgba(0, 0, 0, .85);
-  --overlay: rgba(0, 0, 0, .65);
-  --footer-bg: #0A0E0C;
-  --mvb-green-50: #12201A;
-  --mvb-green-100: #173326;
+  --white: #1B1F1D;
+  --bg: #121614;
+  --bg-subtle: #1D2321;
+  --fg: #EEF1EF;
+  --fg-subtle: #B5BCB8;
+  --grey-5: #1D2321;
+  --grey-25: #2B322F;
+  --grey-50: #39413D;
+  --grey-300: #8A938E;
+  --grey-500: #B5BCB8;
+  --grey-900: #EEF1EF;
+  --border: #39413D;
+  --border-strong: #8A938E;
+  --link: #8FB0FF;
+  --info-bg: #1C3550;
+  --info-fg: #B9D3F0;
+  --warn-bg: #4A1F1A;
+  --warn-fg: #FFB3A6;
+  --coach-bg: #1C3550;
+  --coach-fg: #B9D3F0;
+  --mvb-green-hover: #1E4A33;
+  --footer-bg: #0C0F0E;
+  --shadow-color: rgba(0, 0, 0, .35);
   --st-ontime: #86EA8C;
   --st-early: #8DB4D6;
   --st-slight: #F0954F;
   --st-late: #F07068;
-  --st-plan: #86918C;
-  --info-bg: #17283A;
-  --info-text: #A9CBEE;
-  --tag-detour-bg: #1B3350;
-  --tag-detour: #A9CBEE;
-  --tag-sev-bg: #3D1C19;
-  --tag-sev: #F5A49C;
-  --tag-closed-bg: #3A3013;
-  --tag-closed: #F2D27A;
-  --line-closed: #5D6662;
 }
